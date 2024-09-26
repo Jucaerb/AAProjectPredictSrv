@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form # type: ignore
 import pandas as pd
-from pycaret.clustering import setup, create_model, plot_model, pull
+from pycaret.clustering import setup, create_model, plot_model, pull # type: ignore
 from io import BytesIO
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse # type: ignore
 import os
 import base64
 
