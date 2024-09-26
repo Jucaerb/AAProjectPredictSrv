@@ -1,18 +1,14 @@
-import matplotlib # type: ignore
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form # type: ignore
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 import pandas as pd
-from pycaret.clustering import * # type: ignore
+from pycaret.clustering import setup, create_model, plot_model, pull
 from io import BytesIO
-from fastapi.responses import StreamingResponse, FileResponse, JSONResponse # type: ignore
-import zipfile
+from fastapi.responses import JSONResponse
 import os
 import base64
 
+router = APIRouter()
 
-app = FastAPI()
-matplotlib.use('Agg')
-
-@app.post("/create-pycaret-clusters")
+@router.post("/create-pycaret-clusters")
 async def create_pycaret_clusters(
     n_clusters: int = Form(...),
     normalize: bool = Form(...),
@@ -21,13 +17,13 @@ async def create_pycaret_clusters(
 ):
     try:
         # Leer el archivo CSV recibido en la solicitud
-        contents = await csv_file.read()  # Leer el archivo subido
-        df = pd.read_csv(BytesIO(contents), encoding='latin1')  # Convertir el archivo a DataFrame de Pandas
+        contents = await csv_file.read()
+        df = pd.read_csv(BytesIO(contents), encoding='latin1')
 
         if df.empty:
             raise HTTPException(status_code=400, detail="El archivo CSV está vacío o no tiene datos válidos")
 
-        # Iniciar la configuración en PyCaret, usando los parámetros proporcionados
+        # Iniciar la configuración en PyCaret
         setup(df, normalize=normalize, session_id=session_id)
 
         setup_info_df = pull()
@@ -37,9 +33,6 @@ async def create_pycaret_clusters(
 
         plot_model(kmeans_model, plot='elbow', save=True)
         plot_model(kmeans_model, plot='silhouette', save=True)
-
-        # Convertir la tabla en formato JSON
-        setup_info_json = setup_info_df.to_json(orient="records")
 
         elbow_plot = None
         silhouette_plot = None
@@ -62,6 +55,9 @@ async def create_pycaret_clusters(
         # Eliminar los archivos temporales
         os.remove(elbow_plot)
         os.remove(silhouette_plot)
+
+        # Convertir la tabla en formato JSON
+        setup_info_json = setup_info_df.to_json(orient="records")
 
         # Devolver las imágenes en formato Base64 en la respuesta JSON
         return JSONResponse(content={
