@@ -1,5 +1,8 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim
 
+# Instalar libgomp1 para soporte de operaciones paralelas
+RUN apt-get update && apt-get install -y libgomp1
+
 # Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
