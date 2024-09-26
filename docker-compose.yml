@@ -6,4 +6,11 @@ services:
     container_name: fastapi-container
     ports:
       - "8001:8001"
+    networks:
+      - shared_network
     restart: always
+
+networks:
+  shared_network:
+    name: shared_network
+    driver: bridge
